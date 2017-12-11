@@ -4,7 +4,9 @@
   "description": "Lambda function for Alexa skill - kids-classic-books Edit",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "npm test",
+    "dev": "node-lambda run",
+    "deploy": "node-lambda deploy"
   },
   "repository": {
     "type": "git",
