@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/myke11j/kids-classic-books/issues"
   },
-  "homepage": "https://github.com/myke11j/kids-classic-books#readme"
+  "homepage": "https://github.com/myke11j/kids-classic-books#readme",
+  "dependencies": {
+    "winston": "^2.4.0",
+    "winston-papertrail": "^1.0.5"
+  }
 }
