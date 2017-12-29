@@ -98,7 +98,7 @@ function getBookInfo(intent, session, callback) {
       try {
         const resp = goodReadsJSONResponse.convertToJson(rawData);
         console.log(resp);
-        if (!isBookIsEligible(resp.popular_shelves.shelves)) {
+        if (!isBookIsEligible(resp.popular_shelves)) {
           speechOutput = cardTitle + messages.notChildrenBook;
         } else {
           const {
