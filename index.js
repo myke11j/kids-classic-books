@@ -41,6 +41,14 @@ function handleSessionHelpRequest(callback) {
     callback({}, helpers.buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
+function handleYesIntent (intent, session, callback) {
+
+}
+
+function isBookIsEligible (bookShelves) {
+  return bookShelves.filter(shelf => shelf.name === 'children').length || bookShelves.filter(shelf => shelf.name === 'childrens').length || bookShelves.filter(shelf => shelf.name === 'children-s-book').length || bookShelves.filter(shelf => shelf.name === 'kids').length;
+}
+
 /**
  * Sets the color in the session and prepares the speech to reply to the user.
  */
@@ -49,15 +57,18 @@ function getBookInfo(intent, session, callback) {
     return handleSessionHelpRequest(callback);
   } else if (intent.name === 'AMAZON.StopIntent' || intent.name === 'AMAZON.CancelIntent') {
     return handleSessionEndRequest(callback);
+  } else if (intent.name === 'AMAZON.YesIntent') {
+    return handleYesIntent(intent, session, callback);
   }
-  const cardTitle = intent.name;
   const bookName = intent.slots['BookName'].value;
   const authorName = intent.slots['AuthorName'].value;
   // alexaLogger.logInfo(`Term ${slot.value} requested`);
   let repromptText = '';
+  let speechOutput = '';
   let sessionAttributes = {};
   const shouldEndSession = false;
   alexaLogger.logInfo(`Author: ${authorName}, Book: ${bookName}`);
+  const cardTitle = `${bookName} from ${authorName}`;
   const API = 'https://www.goodreads.com/book/title.xml?author' + authorName + '&key=Uxb0zPb86N4STVy2ECWYA&title=' + bookName;
   alexaLogger.logInfo(API);
   https.get(API, (res) => {
@@ -74,7 +85,7 @@ function getBookInfo(intent, session, callback) {
         `Status Code: ${statusCode}`);
     }
     if (error) {
-      console.log(error.message);
+      alexaLogger.logError(error.message);
       // consume response data to free up memory
       res.resume();
       return;
@@ -86,19 +97,23 @@ function getBookInfo(intent, session, callback) {
     res.on('end', () => {
       try {
         const resp = goodReadsJSONResponse.convertToJson(rawData);
-        // console.log(resp);
-        const {
-          author, book
-        } = resp;
-        let speechOutput = `${book.title} from ${author.name} was published in ${book.publication_year} by publisher ${book.publisher}. It consists of ${book.num_pages} pages. Its average rating on Goodreads is ${book.average_rating}`;
-        callback(sessionAttributes,
+        console.log(resp);
+        if (!isBookIsEligible(resp.popular_shelves.shelves)) {
+          speechOutput = cardTitle + messages.notChildrenBook;
+        } else {
+          const {
+            author, book
+          } = resp;
+          speechOutput = `${book.title} from ${author.name} was published in ${book.publication_year} by publisher ${book.publisher}. It consists of ${book.num_pages} pages. Its average rating on Goodreads is ${book.average_rating}`;
+        }
+        return callback(sessionAttributes,
           helpers.buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
       } catch (e) {
-        console.log(e.message);
+        alexaLogger.logError(e.message);
       }
     });
   }).on('error', (e) => {
-    console.log(`Got error: ${e.message}`);
+    alexaLogger.logError(`Got error: ${e.message}`);
   });
 }
 
