@@ -41,29 +41,26 @@ function handleSessionHelpRequest(callback) {
     callback({}, helpers.buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
 
-function getIntentResponse(username, cb) {
-  let speechOutput;
-  latestTweets(username, (err, tweets) => {
-    cb(tweets[0].content);
-  });
-}
-
 /**
  * Sets the color in the session and prepares the speech to reply to the user.
  */
-function getDataViaSlotVal(intent, session, callback) {
+function getBookInfo(intent, session, callback) {
   if (intent.name === 'AMAZON.HelpIntent') {
     return handleSessionHelpRequest(callback);
   } else if (intent.name === 'AMAZON.StopIntent' || intent.name === 'AMAZON.CancelIntent') {
     return handleSessionEndRequest(callback);
   }
   const cardTitle = intent.name;
-  const slot = intent.slots['Username'];
-  alexaLogger.logInfo(`Term ${slot.value} requested`);
+  const bookName = intent.slots['BookName'].value;
+  const authorName = intent.slots['AuthorName'].value;
+  // alexaLogger.logInfo(`Term ${slot.value} requested`);
   let repromptText = '';
   let sessionAttributes = {};
   const shouldEndSession = false;
-  https.get('https://www.goodreads.com/book/isbn/0441172717?key=Uxb0zPb86N4STVy2ECWYA', (res) => {
+  alexaLogger.logInfo(`Author: ${authorName}, Book: ${bookName}`);
+  const API = 'https://www.goodreads.com/book/title.xml?author' + authorName + '&key=Uxb0zPb86N4STVy2ECWYA&title=' + bookName;
+  alexaLogger.logInfo(API);
+  https.get(API, (res) => {
     const options = {
       xml: {
         normalizeWhitespace: true
@@ -89,7 +86,11 @@ function getDataViaSlotVal(intent, session, callback) {
     res.on('end', () => {
       try {
         const resp = goodReadsJSONResponse.convertToJson(rawData);
-        let speechOutput = resp.book.title;
+        // console.log(resp);
+        const {
+          author, book
+        } = resp;
+        let speechOutput = `${book.title} from ${author.name} was published in ${book.publication_year} by publisher ${book.publisher}. It consists of ${book.num_pages} pages. Its average rating on Goodreads is ${book.average_rating}`;
         callback(sessionAttributes,
           helpers.buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
       } catch (e) {
@@ -128,7 +129,7 @@ function onIntent(intentRequest, session, callback) {
   alexaLogger.logInfo(`onIntent requestId=${intentRequest.requestId}, sessionId=${session.sessionId}`);
 
   const intent = intentRequest.intent;
-  getDataViaSlotVal(intent, session, callback);
+  getBookInfo(intent, session, callback);
 }
 
 /**
