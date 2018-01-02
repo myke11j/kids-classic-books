@@ -97,13 +97,17 @@ KidsService.prototype.handleIntentRequest = function (done) {
     return new Promise((resolve) => {
         switch (this.intentName) {
             case 'AMAZON.YesIntent':
-
+                this.handleYesRequest((sessionAttributes, speechletResponse) => {
+                    done({ sessionAttributes, speechletResponse });
+                });
                 break;
             case 'AMAZON.NoIntent':
-
+                this.handleNoRequest((sessionAttributes, speechletResponse) => {
+                    done({ sessionAttributes, speechletResponse });
+                });
                 break;
             case 'AMAZON.CancelIntent':
-                this.handleExitRequest((sessionAttributes, speechletResponse) => {
+                this.handleCancelRequest((sessionAttributes, speechletResponse) => {
                     done({ sessionAttributes, speechletResponse });
                 });
                 break;
@@ -114,11 +118,13 @@ KidsService.prototype.handleIntentRequest = function (done) {
                 break;
             case 'AMAZON.HelpIntent':
                 this.handleHelpRequest((sessionAttributes, speechletResponse) => {
-                    done({ sessionAttributes, speechletResponse });
+                    return done({ sessionAttributes, speechletResponse });
                 });
                 break;
             case 'GetAlltimePopularChildrenBooks':
-
+                this.handleBookInfoRequest((sessionAttributes, speechletResponse) => {
+                    return done({ sessionAttributes, speechletResponse });
+                });
                 break;
             case 'GetBookInfo':
                 this.handleBookInfoRequest((sessionAttributes, speechletResponse) => {
@@ -127,7 +133,7 @@ KidsService.prototype.handleIntentRequest = function (done) {
                 break;
             case 'GetWeeklyPoularChildrenBooks':
                 this.handleBookInfoRequest((sessionAttributes, speechletResponse) => {
-                    done({ sessionAttributes, speechletResponse });
+                    return done({ sessionAttributes, speechletResponse });
                 });
                 break;
             default:
@@ -145,14 +151,35 @@ KidsService.prototype.handleExitRequest = function (done) {
         { cardTitle, speechOutput, repromptText: null, shouldEndSession });
 };
 
+KidsService.prototype.handleCancelRequest = function (done) {
+    const cardTitle = messages.cardGoodBye();
+    const speechOutput = messages.messageGoodBye();
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = false;
+    const repromptText = messages.messageReprompt();
+    this.session = {};
+    done(this.session,
+        { cardTitle, speechOutput, repromptText, shouldEndSession });
+};
+
 KidsService.prototype.handleHelpRequest = function (done) {
     const cardTitle = messages.cardHelp();
     const speechOutput = messages.messageHelp();
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = false;
-
+    const repromptText = messages.messageReprompt();
     done(this.session,
-        { cardTitle, speechOutput, repromptText: null, shouldEndSession });
+        { cardTitle, speechOutput, repromptText, shouldEndSession });
+};
+
+KidsService.prototype.handleYesRequest = function (done) {
+    const cardTitle = messages.cardHelp();
+    const speechOutput = this.generateResponse();
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = false;
+    const repromptText = messages.messageReprompt();
+    done(this.session,
+        { cardTitle, speechOutput, repromptText, shouldEndSession });
 };
 
 KidsService.prototype.handleBookInfoRequest = function (done) {
@@ -204,12 +231,11 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
                 const {
                    author, book
                 } = resp;
-                this.author = author;
-                this.book = book;
+                this.setSession(resp);
                 if (!this.isBookIsEligible(resp.popular_shelves)) {
                     speechOutput = messages.messageIneligibleRequest(reqCardTitle);
                 } else {
-                    speechOutput = this.generateResponse({ book, author });
+                    speechOutput = this.generateResponse();
                 }
                 sessionAttributes.book = book;
                 sessionAttributes.author = author;
@@ -247,36 +273,43 @@ KidsService.prototype.generateEndPointAndCardTitle = function (title, author) {
 }
 
 KidsService.prototype.generateResponse = function () {
-    const {
-        book, author, session
-    } = this;
+    const { session } = this;
+    const { book, author } = session;
     let resp;
     switch (session.lastReq) {
         case 'basic':
-            this.session.lastReq = 'description';
-            resp = this.book.description
-                 + 'Do you want to know similiar books?';
+            session.lastReq = 'description';
+            resp = session.book.description + ' Do you want to know similiar books?';
             break;
         case 'description':
-            this.session.lastReq = 'similiar_books'
-            resp = this.book.description;
+            session.lastReq = 'similiar_books'
+            resp = book.description;
             break;
         case 'similiar_books':
-            resp = this.similiar_books;
-            this.session.lastReq = 'more_author_books'
+            resp = similiar_books;
+            session.lastReq = 'more_author_books'
             break;
         case 'more_author_books':
-            resp = this.similiar_books;
+            resp = similiar_books;
             break;
         default:
-            this.session.lastReq = 'basic';
-            resp = `${book.title} from ${author.name} was published in ${book.publication_year} by publisher ${book.publisher}.`
-                + `It consists of ${book.num_pages} pages.`
-                + `Its average rating on Goodreads is ${book.average_rating} from ${book.ratings_count} ratings.`
-                + `Do you want to listen to a brief description of ${book.title}?`;
+            session.lastReq = 'basic';
+            resp = `${book.title} from ${author.name} was published in ${book.publication_year} by publisher ${book.publisher}. `
+                + `It consists of ${book.num_pages} pages. `
+                + `Its average rating on Goodreads is ${book.average_rating} from ${book.ratings_count} ratings. `
+                + `Do you want to listen to a brief description of ${book.title}? `;
             break;
     }
+        console.log(resp);
     return resp;
+};
+
+KidsService.prototype.setSession = function (session) {
+    this.session = session;
+};
+
+KidsService.prototype.getSession = function () {
+    return this.session;
 }
 
 module.exports = KidsService;

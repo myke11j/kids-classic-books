@@ -9,24 +9,24 @@ const AlexaFactory = {};
 
 /**
  * @param {Object} params
- * @param {String} params.title - CardTitle
- * @param {String} params.output - Speech text
+ * @param {String} params.cardTitle - CardTitle
+ * @param {String} params.speechOutput - Speech text
  * @param {String} params.repromptText - Repropmt Speech text
  * @param {Boolean} params.shouldEndSession - Session flag, which decided whether to end session or not
  */
 AlexaFactory.buildSpeechletResponse = (params) => {
     const {
-        title, output, repromptText, shouldEndSession
+        cardTitle, speechOutput, repromptText, shouldEndSession
     } = params;
     return {
         outputSpeech: {
             type: 'PlainText',
-            text: output,
+            text: speechOutput,
         },
         card: {
             type: 'Simple',
-            title: `${title}`,
-            content: `${output}`,
+            title: `${cardTitle}`,
+            content: `${speechOutput}`,
         },
         reprompt: {
             outputSpeech: {
