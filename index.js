@@ -14,11 +14,11 @@ const GOODREADS_KEY = process.env.GOODREADS_KEY;
 function getWelcomeResponse(callback) {
   // If we wanted to initialize the session to have some attributes we could add those here.
   const sessionAttributes = {};
-  const cardTitle = messages.cardGreeting;
-  const speechOutput = messages.messageGreeting;
+  const cardTitle = messages.cardGreeting();
+  const speechOutput = messages.messageGreeting();
   // If the user either does not reply to the welcome message or says something that is not
   // understood, they will be prompted again with this text.
-  const repromptText = messages.repromptGreeting;
+  const repromptText = messages.repromptGreeting();
   const shouldEndSession = false;
 
   callback(sessionAttributes,
@@ -26,8 +26,8 @@ function getWelcomeResponse(callback) {
 }
 
 function handleSessionEndRequest(callback) {
-  const cardTitle = messages.cardGoodBye;
-  const speechOutput = messages.messageGoodBye;
+  const cardTitle = messages.cardGoodBye();
+  const speechOutput = messages.messageGoodBye();
   // Setting this to true ends the session and exits the skill.
   const shouldEndSession = true;
 
@@ -35,8 +35,8 @@ function handleSessionEndRequest(callback) {
 }
 
 function handleSessionHelpRequest(callback) {
-    const cardTitle = messages.cardHelp
-    const speechOutput = messages.messageHelp;
+    const cardTitle = messages.cardHelp();
+    const speechOutput = messages.messageHelp();
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = false;
 
@@ -86,15 +86,15 @@ function getBookInfo(intent, session, callback) {
   }
   const bookName = intent.slots['BookName'].value;
   const authorName = intent.slots['AuthorName'].value;
-  const repromptText = messages.messageReprompt;
+  const repromptText = messages.messageReprompt();
   const sessionAttributes = {};
   const shouldEndSession = false;
   let speechOutput = '';
   alexaLogger.logInfo(`Author: ${authorName}, Book: ${bookName}`);
   if (validateRequest(authorName, bookName)) {
-    speechOutput = messages.messageInvalidRequest;
+    speechOutput = messages.messageInvalidRequest();
     return callback(sessionAttributes,
-      helpers.buildSpeechletResponse(messages.cardInvalidRequest, speechOutput, repromptText, shouldEndSession));
+      helpers.buildSpeechletResponse(messages.cardInvalidRequest(), speechOutput, repromptText, shouldEndSession));
   }
   const {
     reqCardTitle, API
