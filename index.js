@@ -7,16 +7,18 @@ const helpers = require('./helpers');
 const messages = require('./messages');
 const alexaLogger = require('./logger');
 
+const GOODREADS_KEY = process.env.GOODREADS_KEY;
+
 // --------------- Functions that control the skill's behavior -----------------------
 
 function getWelcomeResponse(callback) {
   // If we wanted to initialize the session to have some attributes we could add those here.
   const sessionAttributes = {};
-  const cardTitle = messages.titleMessage;
-  const speechOutput = messages.greetingMessage;
+  const cardTitle = messages.cardGreeting;
+  const speechOutput = messages.messageGreeting;
   // If the user either does not reply to the welcome message or says something that is not
   // understood, they will be prompted again with this text.
-  const repromptText = messages.repromptMessage;
+  const repromptText = messages.repromptGreeting;
   const shouldEndSession = false;
 
   callback(sessionAttributes,
@@ -24,8 +26,8 @@ function getWelcomeResponse(callback) {
 }
 
 function handleSessionEndRequest(callback) {
-  const cardTitle = 'Session Ended';
-  const speechOutput = messages.goodByeMessgae;
+  const cardTitle = messages.cardGoodBye;
+  const speechOutput = messages.messageGoodBye;
   // Setting this to true ends the session and exits the skill.
   const shouldEndSession = true;
 
@@ -33,10 +35,10 @@ function handleSessionEndRequest(callback) {
 }
 
 function handleSessionHelpRequest(callback) {
-    const cardTitle = 'Session help';
-    const speechOutput = messages.helpMessage;
+    const cardTitle = messages.cardHelp
+    const speechOutput = messages.messageHelp;
     // Setting this to true ends the session and exits the skill.
-    const shouldEndSession = true;
+    const shouldEndSession = false;
 
     callback({}, helpers.buildSpeechletResponse(cardTitle, speechOutput, null, shouldEndSession));
 }
@@ -47,6 +49,28 @@ function handleYesIntent (intent, session, callback) {
 
 function isBookIsEligible (bookShelves) {
   return bookShelves.filter(shelf => shelf.name === 'children').length || bookShelves.filter(shelf => shelf.name === 'childrens').length || bookShelves.filter(shelf => shelf.name === 'children-s-book').length || bookShelves.filter(shelf => shelf.name === 'kids').length;
+}
+
+function validateRequest (author, title) {
+  return !author && !title;
+}
+
+/**
+ * @desc Geneates API to hit and corrsoponding card title for reuqest
+ * @param {*} author 
+ * @param {*} title 
+ */
+function generateEndPointAndCardTitle (title, author) {
+  const resp = {};
+  resp.reqCardTitle = `Kids Classic Book - ${title}`;
+  if (author) resp.reqCardTitle  += ` from ${author}`;
+  resp.API = 'https://www.goodreads.com/book/title.xml';
+  if (author) {
+    resp.API += '?author' + author + '&key=' + GOODREADS_KEY + '&title=' + title;
+  } else {
+    resp.API += '?key=' + GOODREADS_KEY + '&title=' + title;
+  }
+  return resp;
 }
 
 /**
@@ -62,15 +86,20 @@ function getBookInfo(intent, session, callback) {
   }
   const bookName = intent.slots['BookName'].value;
   const authorName = intent.slots['AuthorName'].value;
-  // alexaLogger.logInfo(`Term ${slot.value} requested`);
-  let repromptText = '';
-  let speechOutput = '';
-  let sessionAttributes = {};
+  const repromptText = messages.messageReprompt;
+  const sessionAttributes = {};
   const shouldEndSession = false;
+  let speechOutput = '';
   alexaLogger.logInfo(`Author: ${authorName}, Book: ${bookName}`);
-  const cardTitle = `${bookName} from ${authorName}`;
-  const API = 'https://www.goodreads.com/book/title.xml?author' + authorName + '&key=Uxb0zPb86N4STVy2ECWYA&title=' + bookName;
-  alexaLogger.logInfo(API);
+  if (validateRequest(authorName, bookName)) {
+    speechOutput = messages.messageInvalidRequest;
+    return callback(sessionAttributes,
+      helpers.buildSpeechletResponse(messages.cardInvalidRequest, speechOutput, repromptText, shouldEndSession));
+  }
+  const {
+    reqCardTitle, API
+  } = generateEndPointAndCardTitle(bookName, authorName);
+  alexaLogger.logInfo(`Endpoint generated: ${API}`);
   https.get(API, (res) => {
     const options = {
       xml: {
@@ -97,17 +126,19 @@ function getBookInfo(intent, session, callback) {
     res.on('end', () => {
       try {
         const resp = goodReadsJSONResponse.convertToJson(rawData);
-        console.log(resp);
+        // console.log(resp);
+        const {
+          author, book
+        } = resp;
         if (!isBookIsEligible(resp.popular_shelves)) {
-          speechOutput = cardTitle + messages.notChildrenBook;
+          speechOutput = messages.messageIneligibleRequest(reqCardTitle);
         } else {
-          const {
-            author, book
-          } = resp;
           speechOutput = `${book.title} from ${author.name} was published in ${book.publication_year} by publisher ${book.publisher}. It consists of ${book.num_pages} pages. Its average rating on Goodreads is ${book.average_rating}`;
         }
+        sessionAttributes.book = book;
+        sessionAttributes.author = author;
         return callback(sessionAttributes,
-          helpers.buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+          helpers.buildSpeechletResponse(reqCardTitle, speechOutput, repromptText, shouldEndSession));
       } catch (e) {
         alexaLogger.logError(e.message);
       }
