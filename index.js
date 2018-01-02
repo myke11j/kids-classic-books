@@ -117,7 +117,9 @@ function getBookInfo(intent, session, callback) {
       alexaLogger.logError(error.message);
       // consume response data to free up memory
       res.resume();
-      return;
+      speechOutput = messages.messageInvalidRequest();
+      return callback(sessionAttributes,
+        helpers.buildSpeechletResponse(reqCardTitle, speechOutput, null, false));
     }
 
     res.setEncoding('utf8');
