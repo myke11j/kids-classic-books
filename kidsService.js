@@ -239,7 +239,9 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
                     speechOutput = messages.messageIneligibleRequest(reqCardTitle);
                     cardTitle = messages.cardIneligibleRequest();
                 } else {
-                    const { cardTitle, speechOutput } = this.generateResponse();
+                    const resp2 = this.generateResponse();
+                    cardTitle = resp2.cardTitle;
+                    speechOutput = resp2.speechOutput;
                 }
                 return done(this.session,
                     { cardTitle, speechOutput, repromptText, shouldEndSession });
