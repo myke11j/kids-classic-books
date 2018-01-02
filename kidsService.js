@@ -30,9 +30,9 @@ function KidsService(params) {
         book, author, intent, session, requestId, reqType, appId, sessionId, intentName
     } = params;
     this.name = 'KidsService';
-    this.book = book || undefined;
-    this.author = author || undefined;
-    this.intent = intent;
+    this.book = book;
+    this.author = author;
+    this.intent = intent || {};
     this.session = session || {};
     this.requestId = requestId;
     this.reqType = reqType;
@@ -173,8 +173,7 @@ KidsService.prototype.handleHelpRequest = function (done) {
 };
 
 KidsService.prototype.handleYesRequest = function (done) {
-    const cardTitle = messages.cardHelp();
-    const speechOutput = this.generateResponse();
+    const { cardTitle, speechOutput } = this.generateResponse();
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = false;
     const repromptText = messages.messageReprompt();
@@ -186,19 +185,22 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
     const bookVal = this.intent.slots['BookName'].value;
     const authorVal = this.intent.slots['AuthorName'].value;
     alexaLogger.logInfo(`Author: ${bookVal}, Book: ${authorVal}`);
-
+    this.book = bookVal;
+    this.author = authorVal;
     const repromptText = messages.messageReprompt();
-    const sessionAttributes = {};
     const shouldEndSession = false;
     let speechOutput = '';
+    let cardTitle = '';
+
     if (this.validateRequest(authorVal, bookVal)) {
         speechOutput = messages.messageInvalidRequest();
+        cardTitle = messages.cardInvalidRequest();
         return done(this.session,
-            { cardTitle: messages.cardInvalidRequest(), speechOutput, repromptText, shouldEndSession });
+            { cardTitle, speechOutput, repromptText, shouldEndSession });
     }
     const {
-        reqCardTitle, API
-    } = this.generateEndPointAndCardTitle(bookVal, authorVal);
+        API
+    } = this.generateEndPointAndCardTitle();
     alexaLogger.logInfo(`Endpoint generated: ${API}`);
     https.get(API, (res) => {
         const options = {
@@ -217,9 +219,10 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
             alexaLogger.logError(error.message);
             // consume response data to free up memory
             res.resume();
-            speechOutput = messages.messageInvalidRequest();
+            speechOutput = messages.messageInvalidRequest().speechOutput;
+            cardTitle = messages.messageInvalidRequest().cardTitle;
             return done(this.session,
-                { cardTitle: reqCardTitle, speechOutput, repromptText: null, shouldEndSession: false });
+                { cardTitle, speechOutput, repromptText: null, shouldEndSession: false });
         }
 
         res.setEncoding('utf8');
@@ -234,13 +237,12 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
                 this.setSession(resp);
                 if (!this.isBookIsEligible(resp.popular_shelves)) {
                     speechOutput = messages.messageIneligibleRequest(reqCardTitle);
+                    cardTitle = messages.cardIneligibleRequest();
                 } else {
-                    speechOutput = this.generateResponse();
+                    const { cardTitle, speechOutput } = this.generateResponse();
                 }
-                sessionAttributes.book = book;
-                sessionAttributes.author = author;
                 return done(this.session,
-                    { cardTitle: reqCardTitle, speechOutput, repromptText, shouldEndSession });
+                    { cardTitle, speechOutput, repromptText, shouldEndSession });
             } catch (e) {
                 alexaLogger.logError(e.message);
             }
@@ -254,53 +256,50 @@ KidsService.prototype.isBookIsEligible = (bookShelves) => bookShelves.filter(she
 
 KidsService.prototype.validateRequest = (author, title) => !author && !title;
 
-/**
- * @desc Geneates API to hit and corrsoponding card title for reuqest
- * @param {*} author 
- * @param {*} title 
- */
-KidsService.prototype.generateEndPointAndCardTitle = function (title, author) {
+KidsService.prototype.generateEndPointAndCardTitle = function () {
+    const { book, author } = this;
     const resp = {};
-    resp.reqCardTitle = `Kids Classic Book - ${title}`;
-    if (author) resp.reqCardTitle += ` from ${author}`;
     resp.API = 'https://www.goodreads.com/book/title.xml';
-    if (author) {
+    if (author) {book
         resp.API += '?author' + author + '&key=' + GOODREADS_KEY + '&title=' + title;
     } else {
-        resp.API += '?key=' + GOODREADS_KEY + '&title=' + title;
+        resp.API += '?key=' + GOODREADS_KEY + '&title=' + book;
     }
     return resp;
 }
 
 KidsService.prototype.generateResponse = function () {
-    const { session } = this;
-    const { book, author } = session;
-    let resp;
+    const { book, author, session } = this;
+    const resp = {};
+    resp.cardTitle = `Kids Classic Book - ${book}`;
+    if (author) resp.cardTitle += ` from ${author}`;
     switch (session.lastReq) {
         case 'basic':
             session.lastReq = 'description';
-            resp = session.book.description + ' Do you want to know similiar books?';
+            resp.cardTitle += ` - Description`;
+            resp.speechOutput = session.book.description + ' Do you want to know similiar books?';
             break;
         case 'description':
             session.lastReq = 'similiar_books'
-            resp = book.description;
+            resp.cardTitle += ` - Similiar Books`;
+            resp.speechOutput = session.book.description;
             break;
         case 'similiar_books':
             resp = similiar_books;
             session.lastReq = 'more_author_books'
+            resp.speechOutput.cardTitle += ` - More Books from ${author}`;
             break;
         case 'more_author_books':
-            resp = similiar_books;
+            resp.speechOutput = similiar_books;
             break;
         default:
             session.lastReq = 'basic';
-            resp = `${book.title} from ${author.name} was published in ${book.publication_year} by publisher ${book.publisher}. `
-                + `It consists of ${book.num_pages} pages. `
-                + `Its average rating on Goodreads is ${book.average_rating} from ${book.ratings_count} ratings. `
-                + `Do you want to listen to a brief description of ${book.title}? `;
+            resp.speechOutput = `${session.book.title} from ${session.author.name} was published in ${session.book.publication_year} by publisher ${session.book.publisher}. `
+                + `It consists of ${session.book.num_pages} pages. `
+                + `Its average rating on Goodreads is ${session.book.average_rating} from ${session.book.ratings_count} ratings. `
+                + `Do you want to listen to a brief description of ${session.book.title}? `;
             break;
     }
-        console.log(resp);
     return resp;
 };
 
