@@ -90,6 +90,9 @@ KidsService.prototype.handleIntent = function () {
     });
 };
 
+/**
+ * @desc Greeting handler
+ */
 KidsService.prototype.handleLaunchRequest = function (done) {
     // If we wanted to initialize the session to have some attributes we could add those here.
     const sessionAttributes = {};
@@ -107,44 +110,54 @@ KidsService.prototype.handleLaunchRequest = function (done) {
     });
 };
 
-/* Card related methods */
-KidsService.prototype.generateCardTitle = function () {
-    let title = `${skillName} - ${this.appendBooktitleAndAuthor()}`;
-    if (this.session.currentReq) title += ` - ${this.session.currentReq}`;
-    return title;
-
-}
-
-KidsService.prototype.generateCardText = function () {
-    let text = this.generateResponse();
-    if (this.intentName === 'GetBookInfo' && this.session.book.url) {
-        text += ` Goodread URL: ${this.session.book.url}`;
-    }
-    return text;
-}
-
-KidsService.prototype.generateCard = function (cardTitle, cardText) {
-    const card = {
-        type: 'text',
-        title: cardTitle || this.generateCardTitle(),
-        content: cardText || this.generateCardText()
-    };
-    if (this.intentName === 'GetBookInfo') {
-        card.image = {};
-        card.type = 'Standard';
-        card.image.smallImageUrl = this.session.book.small_image_url;
-        card.image.largeImageUrl = this.session.book.image_url;
-    }
-    return card;
+/**
+ * @desc Exit and StopIntent handler
+ */
+KidsService.prototype.handleExitRequest = function (done) {
+    // const cardTitle = messages.cardGoodBye();
+    // const speechOutput = messages.messageGoodBye();
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = true;
+    const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
+    const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
+    this.session = {};
+    done({
+        sessionAttributes: {},
+        speechletResponse: { card, outputSpeech, repromptText: null, shouldEndSession }
+    });
 };
 
-/* OutputSpeech related methods */
-KidsService.prototype.generateOutputSpeech = function (output) {
-    const outputSpeech = {
-        type: 'PlainText',
-        text: output || this.generateResponse()
-    };
-    return outputSpeech;
+/**
+ * @desc CancelIntent handler
+ */
+KidsService.prototype.handleCancelRequest = function (done) {
+    // const cardTitle = messages.cardGoodBye();
+    // const speechOutput = messages.messageGoodBye();
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = false;
+    const repromptText = messages.messageReprompt();
+    const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
+    const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
+    this.session = {};
+    done({
+        sessionAttributes: {},
+        speechletResponse: { card, outputSpeech, repromptText: null, shouldEndSession }
+    });
+};
+
+/**
+ * @desc HelpIntent handler
+ */
+KidsService.prototype.handleHelpRequest = function (done) {
+    // const cardTitle = messages.cardHelp();
+    // const speechOutput = messages.messageHelp();
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = false;
+    const repromptText = messages.messageReprompt();
+    const card = this.generateCard(messages.cardHelp(), messages.messageHelp());
+    const outputSpeech = this.generateOutputSpeech(messages.messageHelp());
+    done(this.session,
+        { card, outputSpeech, repromptText, shouldEndSession });
 };
 
 KidsService.prototype.handleIntentRequest = function (done) {
@@ -196,42 +209,45 @@ KidsService.prototype.handleIntentRequest = function (done) {
     });
 };
 
-KidsService.prototype.handleExitRequest = function (done) {
-    // const cardTitle = messages.cardGoodBye();
-    // const speechOutput = messages.messageGoodBye();
-    // Setting this to true ends the session and exits the skill.
-    const shouldEndSession = true;
-    const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
-    const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
-    done({
-        sessionAttributes: {},
-        speechletResponse: { card, outputSpeech, repromptText: null, shouldEndSession }
-    });
+/* Card related methods */
+KidsService.prototype.generateCardTitle = function () {
+    let title = `${skillName} - ${this.appendBooktitleAndAuthor()}`;
+    if (this.session.currentReq) title += ` - ${this.session.currentReq}`;
+    return title;
+
+}
+
+KidsService.prototype.generateCardText = function () {
+    let text = this.generateResponse();
+    if (this.intentName === 'GetBookInfo' && this.session.book.url) {
+        text += ` Goodread URL: ${this.session.book.url}`;
+    }
+    return text;
+}
+
+KidsService.prototype.generateCard = function (cardTitle, cardText) {
+    const card = {
+        type: 'Standard',
+        title: cardTitle || this.generateCardTitle(),
+        text: cardText || this.generateCardText(),
+        content: cardText || this.generateCardText()
+    };
+    if (this.intentName === 'GetBookInfo') {
+        card.image = {};
+        card.type = 'Standard';
+        card.image.smallImageUrl = this.session.book.small_image_url;
+        card.image.largeImageUrl = this.session.book.image_url;
+    }
+    return card;
 };
 
-KidsService.prototype.handleCancelRequest = function (done) {
-    // const cardTitle = messages.cardGoodBye();
-    // const speechOutput = messages.messageGoodBye();
-    // Setting this to true ends the session and exits the skill.
-    const shouldEndSession = false;
-    const repromptText = messages.messageReprompt();
-    const card = this.generateCard(messages.cardGoodBye());
-    const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
-    this.session = {};
-    done(this.session,
-        { card, outputSpeech, repromptText, shouldEndSession });
-};
-
-KidsService.prototype.handleHelpRequest = function (done) {
-    // const cardTitle = messages.cardHelp();
-    // const speechOutput = messages.messageHelp();
-    // Setting this to true ends the session and exits the skill.
-    const shouldEndSession = false;
-    const repromptText = messages.messageReprompt();
-    const card = this.generateCard(messages.cardHelp());
-    const outputSpeech = this.generateOutputSpeech(messages.messageHelp());
-    done(this.session,
-        { card, outputSpeech, repromptText, shouldEndSession });
+/* OutputSpeech related methods */
+KidsService.prototype.generateOutputSpeech = function (output) {
+    const outputSpeech = {
+        type: 'PlainText',
+        text: output || this.generateResponse()
+    };
+    return outputSpeech;
 };
 
 KidsService.prototype.handleYesRequest = function (done) {
