@@ -21,7 +21,7 @@ exports.handler = (event, context, callback) => {
           intent: event.request.intent,
           reqType: event.request.type,
           appId: event.session.application.applicationId,
-          intentName: event.request.intent.name
+          intentName: event.request.intent ? event.request.intent.name : null
         });
         kidsSkill.logRequest();
         return kidsSkill.handleIntent();

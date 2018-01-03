@@ -16,6 +16,17 @@ const messages = require('./messages');
 const alexaLogger = require('./logger');
 
 const GOODREADS_KEY = process.env.GOODREADS_KEY;
+const skillName = 'Kids Classic Books';
+
+/**
+ * @const
+ * @desc Stores all the Goodreads shelves which can be classified for kids books
+ * Any book which have one of this shelve will be consider a kids book 
+ */
+const kidsShelves = [
+    'children', 'childrens', 'children-s-book', 'children-s-books', 'kids', 'kid', 'fantasy-middlegrade',
+    'middle-grade', 'fantasy-middlegrade', 'middle-grades'
+];
 
 /**
  * @constructor
@@ -38,7 +49,7 @@ function KidsService(params) {
     this.reqType = reqType;
     this.appId = appId;
     this.sessionId = sessionId;
-    this.intentName = intentName;
+    this.intentName = intentName || '';
 }
 
 KidsService.prototype.logRequest = function () {
@@ -82,15 +93,58 @@ KidsService.prototype.handleIntent = function () {
 KidsService.prototype.handleLaunchRequest = function (done) {
     // If we wanted to initialize the session to have some attributes we could add those here.
     const sessionAttributes = {};
-    const cardTitle = messages.cardGreeting();
-    const speechOutput = messages.messageGreeting();
+    // const cardTitle = messages.cardGreeting();
+    // const speechOutput = messages.messageGreeting();
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
     const repromptText = messages.repromptGreeting();
     const shouldEndSession = false;
+    const outputSpeech = this.generateOutputSpeech(messages.messageGreeting());
+    const card = this.generateCard(messages.cardGreeting(), messages.messageGreeting());
+    done({
+        sessionAttributes,
+        speechletResponse: { card, outputSpeech, repromptText, shouldEndSession }
+    });
+};
 
-    done(sessionAttributes,
-        { cardTitle, speechOutput, repromptText, shouldEndSession });
+/* Card related methods */
+KidsService.prototype.generateCardTitle = function () {
+    let title = `${skillName} - ${this.appendBooktitleAndAuthor()}`;
+    if (this.session.currentReq) title += ` - ${this.session.currentReq}`;
+    return title;
+
+}
+
+KidsService.prototype.generateCardText = function () {
+    let text = this.generateResponse();
+    if (this.intentName === 'GetBookInfo' && this.session.book.url) {
+        text += ` Goodread URL: ${this.session.book.url}`;
+    }
+    return text;
+}
+
+KidsService.prototype.generateCard = function (cardTitle, cardText) {
+    const card = {
+        type: 'text',
+        title: cardTitle || this.generateCardTitle(),
+        content: cardText || this.generateCardText()
+    };
+    if (this.intentName === 'GetBookInfo') {
+        card.image = {};
+        card.type = 'Standard';
+        card.image.smallImageUrl = this.session.book.small_image_url;
+        card.image.largeImageUrl = this.session.book.image_url;
+    }
+    return card;
+};
+
+/* OutputSpeech related methods */
+KidsService.prototype.generateOutputSpeech = function (output) {
+    const outputSpeech = {
+        type: 'PlainText',
+        text: output || this.generateResponse()
+    };
+    return outputSpeech;
 };
 
 KidsService.prototype.handleIntentRequest = function (done) {
@@ -143,48 +197,67 @@ KidsService.prototype.handleIntentRequest = function (done) {
 };
 
 KidsService.prototype.handleExitRequest = function (done) {
-    const cardTitle = messages.cardGoodBye();
-    const speechOutput = messages.messageGoodBye();
+    // const cardTitle = messages.cardGoodBye();
+    // const speechOutput = messages.messageGoodBye();
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = true;
-    done(this.session,
-        { cardTitle, speechOutput, repromptText: null, shouldEndSession });
+    const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
+    const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
+    done({
+        sessionAttributes: {},
+        speechletResponse: { card, outputSpeech, repromptText: null, shouldEndSession }
+    });
 };
 
 KidsService.prototype.handleCancelRequest = function (done) {
-    const cardTitle = messages.cardGoodBye();
-    const speechOutput = messages.messageGoodBye();
+    // const cardTitle = messages.cardGoodBye();
+    // const speechOutput = messages.messageGoodBye();
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = false;
     const repromptText = messages.messageReprompt();
+    const card = this.generateCard(messages.cardGoodBye());
+    const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
     this.session = {};
     done(this.session,
-        { cardTitle, speechOutput, repromptText, shouldEndSession });
+        { card, outputSpeech, repromptText, shouldEndSession });
 };
 
 KidsService.prototype.handleHelpRequest = function (done) {
-    const cardTitle = messages.cardHelp();
-    const speechOutput = messages.messageHelp();
+    // const cardTitle = messages.cardHelp();
+    // const speechOutput = messages.messageHelp();
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = false;
     const repromptText = messages.messageReprompt();
+    const card = this.generateCard(messages.cardHelp());
+    const outputSpeech = this.generateOutputSpeech(messages.messageHelp());
     done(this.session,
-        { cardTitle, speechOutput, repromptText, shouldEndSession });
+        { card, outputSpeech, repromptText, shouldEndSession });
 };
 
 KidsService.prototype.handleYesRequest = function (done) {
-    const { cardTitle, speechOutput } = this.generateResponse();
+    // const { cardTitle, speechOutput } = this.generateResponse();
     // Setting this to true ends the session and exits the skill.
     const shouldEndSession = false;
     const repromptText = messages.messageReprompt();
     done(this.session,
-        { cardTitle, speechOutput, repromptText, shouldEndSession });
+        { card, outputSpeech, repromptText, shouldEndSession });
+};
+
+KidsService.prototype.handleNoRequest = function (done) {
+    // const { cardTitle, speechOutput } = this.generateResponse();
+    // Setting this to true ends the session and exits the skill.
+    const shouldEndSession = true;
+    const repromptText = messages.messageReprompt();
+    const card = this.generateCard(messages.cardHelp());
+    const outputSpeech = this.generateOutputSpeech(messages.messageHelp());
+    done(this.session,
+        { card, outputSpeech, repromptText, shouldEndSession });
 };
 
 KidsService.prototype.handleBookInfoRequest = function (done) {
     const bookVal = this.intent.slots['BookName'].value;
     const authorVal = this.intent.slots['AuthorName'].value;
-    alexaLogger.logInfo(`Author: ${bookVal}, Book: ${authorVal}`);
+    alexaLogger.logInfo(`Author: ${authorVal}, Book: ${bookVal}`);
     this.book = bookVal;
     this.author = authorVal;
     const repromptText = messages.messageReprompt();
@@ -193,10 +266,12 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
     let cardTitle = '';
 
     if (this.validateRequest(authorVal, bookVal)) {
-        speechOutput = messages.messageInvalidRequest();
-        cardTitle = messages.cardInvalidRequest();
+        let card = this.generateCard(messages.cardInvalidRequest())
+        let outputSpeech = this.generateCard(messages.messageInvalidRequest())
+        // speechOutput = messages.messageInvalidRequest();
+        // cardTitle = messages.cardInvalidRequest();
         return done(this.session,
-            { cardTitle, speechOutput, repromptText, shouldEndSession });
+            { card, outputSpeech, repromptText, shouldEndSession });
     }
     const {
         API
@@ -232,11 +307,11 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
             try {
                 const resp = goodReadsJSONResponse.convertToJson(rawData);
                 const {
-                   author, book
+                   author, book, similiar_books
                 } = resp;
                 this.setSession(resp);
-                if (!this.isBookIsEligible(resp.popular_shelves)) {
-                    speechOutput = messages.messageIneligibleRequest(reqCardTitle);
+                if (!this.isBookIsEligible(popular_shelves)) {
+                    speechOutput = messages.messageIneligibleRequest(this.getRootCardTitle());
                     cardTitle = messages.cardIneligibleRequest();
                 } else {
                     const resp2 = this.generateResponse();
@@ -254,16 +329,33 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
     });
 };
 
-KidsService.prototype.isBookIsEligible = (bookShelves) => bookShelves.filter(shelf => shelf.name === 'children').length || bookShelves.filter(shelf => shelf.name === 'childrens').length || bookShelves.filter(shelf => shelf.name === 'children-s-book').length || bookShelves.filter(shelf => shelf.name === 'kids').length;
+KidsService.prototype.isBookIsEligible = function (bookShelves) {
+    let flag = false;
+    for (var index = 0; index < kidsShelves.length; index++) {
+        const item = kidsShelves[index];
+        if (bookShelves.filter(shelf => shelf.name === item).length) {
+            alexaLogger.logInfo(`${this.book} classified as ${item}`);
+            flag = true;
+            break;
+        }
+    }
+    return flag;
+}
 
 KidsService.prototype.validateRequest = (author, title) => !author && !title;
+
+KidsService.prototype.appendBooktitleAndAuthor = function () {
+    let title = this.book;
+    if (this.author) title += ' from ' + this.author;
+    return title;
+}
 
 KidsService.prototype.generateEndPointAndCardTitle = function () {
     const { book, author } = this;
     const resp = {};
     resp.API = 'https://www.goodreads.com/book/title.xml';
-    if (author) {book
-        resp.API += '?author' + author + '&key=' + GOODREADS_KEY + '&title=' + title;
+    if (author) {
+        resp.API += '?author' + author + '&key=' + GOODREADS_KEY + '&title=' + book;
     } else {
         resp.API += '?key=' + GOODREADS_KEY + '&title=' + book;
     }
@@ -273,12 +365,11 @@ KidsService.prototype.generateEndPointAndCardTitle = function () {
 KidsService.prototype.generateResponse = function () {
     const { book, author, session } = this;
     const resp = {};
-    resp.cardTitle = `Kids Classic Book - ${book}`;
-    if (author) resp.cardTitle += ` from ${author}`;
+    resp.cardTitle = `Kids Classic Book`;
     switch (session.lastReq) {
         case 'basic':
             session.lastReq = 'description';
-            resp.cardTitle += ` - Description`;
+            resp.cardTitle += `${this.getRootCardTitle()} - Description`;
             resp.speechOutput = session.book.description + ' Do you want to know similiar books?';
             break;
         case 'description':

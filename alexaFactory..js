@@ -16,18 +16,11 @@ const AlexaFactory = {};
  */
 AlexaFactory.buildSpeechletResponse = (params) => {
     const {
-        cardTitle, speechOutput, repromptText, shouldEndSession
+        outputSpeech, repromptText, shouldEndSession, card
     } = params;
     return {
-        outputSpeech: {
-            type: 'PlainText',
-            text: speechOutput,
-        },
-        card: {
-            type: 'Simple',
-            title: `${cardTitle}`,
-            content: `${speechOutput}`,
-        },
+        outputSpeech,
+        card,
         reprompt: {
             outputSpeech: {
                 type: 'PlainText',
