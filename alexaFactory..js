@@ -3,7 +3,7 @@
  * @author Mukul <@mukul1904>
  * @desc This file contains methods which generates and returns speech response for alexa
  */
-'use strict';
+
 
 const AlexaFactory = {};
 
@@ -15,21 +15,21 @@ const AlexaFactory = {};
  * @param {Boolean} params.shouldEndSession - Session flag, which decided whether to end session or not
  */
 AlexaFactory.buildSpeechletResponse = (params) => {
-    const {
+  const {
         outputSpeech, repromptText, shouldEndSession, card
     } = params;
-    return {
-        outputSpeech,
-        card,
-        reprompt: {
-            outputSpeech: {
-                type: 'PlainText',
-                text: repromptText,
-            },
-        },
-        shouldEndSession,
-    };
-}
+  return {
+    outputSpeech,
+    card,
+    reprompt: {
+      outputSpeech: {
+        type: 'PlainText',
+        text: repromptText,
+      },
+    },
+    shouldEndSession,
+  };
+};
 
 /**
  * @param {Object} params
@@ -37,14 +37,14 @@ AlexaFactory.buildSpeechletResponse = (params) => {
  * @param {Object} params.speechletResponse
  */
 AlexaFactory.buildResponse = (params) => {
-    const {
+  const {
         sessionAttributes, speechletResponse
     } = params;
-    return {
-        version: '1.0',
-        sessionAttributes,
-        response: speechletResponse,
-    };
-}
+  return {
+    version: '1.0',
+    sessionAttributes,
+    response: speechletResponse,
+  };
+};
 
 module.exports = AlexaFactory;

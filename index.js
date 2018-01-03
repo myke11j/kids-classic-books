@@ -1,4 +1,4 @@
-'use strict';
+
 
 const AlexaFactory = require('./alexaFactory.');
 const alexaLogger = require('./logger');
@@ -11,7 +11,7 @@ const KidsService = require('./kidsService');
 exports.handler = (event, context, callback) => {
   try {
     context.callbackWaitsForEmptyEventLoop = false;
-    alexaLogger
+    return alexaLogger
       .init()
       .then(() => {
         const kidsSkill = new KidsService({

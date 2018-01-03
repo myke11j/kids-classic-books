@@ -29,7 +29,7 @@ const logger = new winston.Logger({
   transports: transports
 });
 
-let logContext = '';
+const logContext = '';
 
 /**
  * Returns the underlying logger object which can be used for direct manipulation
