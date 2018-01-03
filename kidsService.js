@@ -5,7 +5,7 @@
  */
 
 
-/* eslint-disable strict, new-cap */
+/* eslint-disable strict, no-return-assign, consistent-return, no-unused-vars */
 
 'use strict';
 
@@ -58,7 +58,6 @@ KidsService.prototype.logRequest = function () {
 
 KidsService.prototype.handleIntent = function () {
   return new Promise((resolve) => {
-    const speechResponse = {};
     switch (this.reqType) {
       case 'LaunchRequest':
         this.handleLaunchRequest((resp) => {
@@ -114,9 +113,9 @@ KidsService.prototype.handleLaunchRequest = function (done) {
  * @desc Exit and StopIntent handler
  */
 KidsService.prototype.handleExitRequest = function (done) {
-    // const cardTitle = messages.cardGoodBye();
-    // const speechOutput = messages.messageGoodBye();
-    // Setting this to true ends the session and exits the skill.
+  // const cardTitle = messages.cardGoodBye();
+  // const speechOutput = messages.messageGoodBye();
+  // Setting this to true ends the session and exits the skill.
   const shouldEndSession = true;
   const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
   const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
@@ -131,11 +130,7 @@ KidsService.prototype.handleExitRequest = function (done) {
  * @desc CancelIntent handler
  */
 KidsService.prototype.handleCancelRequest = function (done) {
-    // const cardTitle = messages.cardGoodBye();
-    // const speechOutput = messages.messageGoodBye();
-    // Setting this to true ends the session and exits the skill.
   const shouldEndSession = false;
-  const repromptText = messages.messageReprompt();
   const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
   const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
   this.session = {};
@@ -149,9 +144,6 @@ KidsService.prototype.handleCancelRequest = function (done) {
  * @desc HelpIntent handler
  */
 KidsService.prototype.handleHelpRequest = function (done) {
-    // const cardTitle = messages.cardHelp();
-    // const speechOutput = messages.messageHelp();
-    // Setting this to true ends the session and exits the skill.
   const shouldEndSession = false;
   const repromptText = messages.messageReprompt();
   const card = this.generateCard(messages.cardHelp(), messages.messageHelp());
@@ -161,44 +153,42 @@ KidsService.prototype.handleHelpRequest = function (done) {
 };
 
 KidsService.prototype.handleIntentRequest = function (done) {
-  return new Promise((resolve) => {
-    switch (this.intentName) {
-      case 'AMAZON.YesIntent':
-        this.handleYesRequest((sessionAttributes, speechletResponse) => {
-          done({ sessionAttributes, speechletResponse });
-        });
-        break;
-      case 'AMAZON.NoIntent':
-        this.handleNoRequest((sessionAttributes, speechletResponse) => {
-          done({ sessionAttributes, speechletResponse });
-        });
-        break;
-      case 'AMAZON.CancelIntent':
-        this.handleCancelRequest((sessionAttributes, speechletResponse) => {
-          done({ sessionAttributes, speechletResponse });
-        });
-        break;
-      case 'AMAZON.StopIntent':
-        this.handleExitRequest((sessionAttributes, speechletResponse) => {
-          done({ sessionAttributes, speechletResponse });
-        });
-        break;
-      case 'AMAZON.HelpIntent':
-        this.handleHelpRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
-        break;
-      case 'GetAlltimePopularChildrenBooks':
-        this.handleBookInfoRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
-        break;
-      case 'GetBookInfo':
-        this.handleBookInfoRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
-        break;
-      case 'GetWeeklyPoularChildrenBooks':
-        this.handleBookInfoRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
-        break;
-      default:
-        break;
-    }
-  });
+  switch (this.intentName) {
+    case 'AMAZON.YesIntent':
+      this.handleYesRequest((sessionAttributes, speechletResponse) => {
+        done({ sessionAttributes, speechletResponse });
+      });
+      break;
+    case 'AMAZON.NoIntent':
+      this.handleNoRequest((sessionAttributes, speechletResponse) => {
+        done({ sessionAttributes, speechletResponse });
+      });
+      break;
+    case 'AMAZON.CancelIntent':
+      this.handleCancelRequest((sessionAttributes, speechletResponse) => {
+        done({ sessionAttributes, speechletResponse });
+      });
+      break;
+    case 'AMAZON.StopIntent':
+      this.handleExitRequest((sessionAttributes, speechletResponse) => {
+        done({ sessionAttributes, speechletResponse });
+      });
+      break;
+    case 'AMAZON.HelpIntent':
+      this.handleHelpRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
+      break;
+    case 'GetAlltimePopularChildrenBooks':
+      this.handleBookInfoRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
+      break;
+    case 'GetBookInfo':
+      this.handleBookInfoRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
+      break;
+    case 'GetWeeklyPoularChildrenBooks':
+      this.handleBookInfoRequest((sessionAttributes, speechletResponse) => done({ sessionAttributes, speechletResponse }));
+      break;
+    default:
+      break;
+  }
 };
 
 /* Card related methods */
@@ -242,64 +232,62 @@ KidsService.prototype.generateOutputSpeech = function (output) {
 };
 
 KidsService.prototype.generateSpeechText = function () {
-    const { book, author, session } = this;
-    const resp = {};
-    switch (session.lastReq) {
-        case 'basic':
-            resp.speechOutput = `${session.book.description} Do you want to get list of similiar books?`;
-            break;
-        case 'Description':
-            resp.speechOutput = session.book.description;
-            break;
-        case 'Similiar Books':
-            resp.speechOutput = 'similiar_books';
-            break;
-        case 'More books from Author':
-            resp.speechOutput = 'similiar_books';
-            break;
-        default:
-            resp.speechOutput = `${session.book.title} from ${session.author.name} was published in ${session.book.publication_year} by publisher ${session.book.publisher}. `
+  const { session } = this;
+  const resp = {};
+  switch (session.lastReq) {
+    case 'basic':
+      resp.speechOutput = `${session.book.description} Do you want to get list of similiar books?`;
+      break;
+    case 'Description':
+      resp.speechOutput = session.book.description;
+      break;
+    case 'Similiar Books':
+      resp.speechOutput = 'similiar_books';
+      break;
+    case 'More books from Author':
+      resp.speechOutput = 'similiar_books';
+      break;
+    default:
+      resp.speechOutput = `${session.book.title} from ${session.author.name} was published in ${session.book.publication_year} by publisher ${session.book.publisher}. `
                 + `It consists of ${session.book.num_pages} pages. `
                 + `Its average rating on Goodreads is ${session.book.average_rating} from ${session.book.ratings_count} ratings. `
                 + `Do you want to listen to a brief description of ${session.book.title}? `;
-            break;
-    }
-    return resp;
+      break;
+  }
+  return resp;
 };
 
 KidsService.prototype.setLastReq = function () {
-    const { session } = this;
-    switch (session.lastReq) {
-        case 'basic':
-            session.lastReq = 'Description';
-            break;
-        case 'Description':
-            session.lastReq = 'Similiar Books';
-            break;
-        case 'Similiar Books':
-            session.lastReq = 'More books from Author';
-            break;
-        case 'More books from Author':
-            session.lastReq = 'Last';
-            break;
-        default:
-            session.lastReq = 'basic';
-            break;
-    }
+  const { session } = this;
+  switch (session.lastReq) {
+    case 'basic':
+      session.lastReq = 'Description';
+      break;
+    case 'Description':
+      session.lastReq = 'Similiar Books';
+      break;
+    case 'Similiar Books':
+      session.lastReq = 'More books from Author';
+      break;
+    case 'More books from Author':
+      session.lastReq = 'Last';
+      break;
+    default:
+      session.lastReq = 'basic';
+      break;
+  }
 };
 
 KidsService.prototype.handleYesRequest = function (done) {
-    // const { cardTitle, speechOutput } = this.generateSpeechText();
-    // Setting this to true ends the session and exits the skill.
   const shouldEndSession = false;
   const repromptText = messages.messageReprompt();
+  const card = this.generateCard(messages.cardHelp());
+  const outputSpeech = this.generateOutputSpeech(messages.messageHelp());
   done(this.session,
         { card, outputSpeech, repromptText, shouldEndSession });
 };
 
 KidsService.prototype.handleNoRequest = function (done) {
-    // const { cardTitle, speechOutput } = this.generateSpeechText();
-    // Setting this to true ends the session and exits the skill.
   const shouldEndSession = true;
   const repromptText = messages.messageReprompt();
   const card = this.generateCard(messages.cardHelp());
@@ -316,7 +304,7 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
   this.author = authorVal;
   const repromptText = messages.messageReprompt();
   const shouldEndSession = false;
-  
+
   /**
    * In case user doesn't mention either book title or author
    */
@@ -364,13 +352,13 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
         /* JSON response converted from Goodreads XML response */
         const resp = goodReadsJSONResponse.convertToJson(rawData);
         const {
-            author, book, popular_shelves
+            popular_shelves
         } = resp;
         this.setSession(resp);
         if (!this.isBookIsEligible(popular_shelves)) {
-            const card = this.generateCard(messages.cardIneligibleRequest(), messages.messageIneligibleRequest(this.book));
-            const outputSpeech = this.generateOutputSpeech(messages.messageIneligibleRequest(this.book));
-            return done(this.session,
+          const card = this.generateCard(messages.cardIneligibleRequest(), messages.messageIneligibleRequest(this.book));
+          const outputSpeech = this.generateOutputSpeech(messages.messageIneligibleRequest(this.book));
+          return done(this.session,
                 { card, outputSpeech, repromptText: null, shouldEndSession: true });
         }
         const card = this.generateCard();
