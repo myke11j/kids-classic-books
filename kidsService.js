@@ -190,9 +190,7 @@ KidsService.prototype.handleIntentRequest = function (done) {
 
 /* Card related methods */
 KidsService.prototype.generateCardTitle = function () {
-  let title = `${skillName} - ${this.appendBooktitleAndAuthor()}`;
-  if (this.session.currentReq) title += ` - ${this.session.currentReq}`;
-  return title;
+  return `${skillName} - ${this.appendBooktitleAndAuthor()}`;
 };
 
 KidsService.prototype.generateCardText = function () {
@@ -278,8 +276,8 @@ KidsService.prototype.setLastReq = function () {
 KidsService.prototype.handleYesRequest = function (done) {
   const shouldEndSession = false;
   const repromptText = messages.messageReprompt();
-  const card = this.generateCard(messages.cardHelp());
-  const outputSpeech = this.generateOutputSpeech(messages.messageHelp());
+  const card = this.generateCard();
+  const outputSpeech = this.generateOutputSpeech();
   done(this.session,
         { card, outputSpeech, repromptText, shouldEndSession });
 };
