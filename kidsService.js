@@ -349,8 +349,10 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
         /* JSON response converted from Goodreads XML response */
         const resp = goodReadsJSONResponse.convertToJson(rawData);
         const {
-            popular_shelves
+            popular_shelves, book, author
         } = resp;
+        this.book = book.title;
+        this.author = author.name;
         this.setSession(resp);
         if (!this.isBookIsEligible(popular_shelves)) {
           const card = this.generateCard(messages.cardIneligibleRequest(), messages.messageIneligibleRequest(this.book));
