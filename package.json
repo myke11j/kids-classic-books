@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/myke11j/kids-classic-books#readme",
   "dependencies": {
-    "goodreads-json-api": "^1.0.3",
+    "goodreads-json-api": "^1.0.4",
     "winston": "^2.4.0",
     "winston-papertrail": "^1.0.5"
   },
