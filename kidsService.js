@@ -113,9 +113,6 @@ KidsService.prototype.handleLaunchRequest = function (done) {
  * @desc Exit and StopIntent handler
  */
 KidsService.prototype.handleExitRequest = function (done) {
-  // const cardTitle = messages.cardGoodBye();
-  // const speechOutput = messages.messageGoodBye();
-  // Setting this to true ends the session and exits the skill.
   const shouldEndSession = true;
   const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
   const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
@@ -170,8 +167,8 @@ KidsService.prototype.handleIntentRequest = function (done) {
       });
       break;
     case 'AMAZON.StopIntent':
-      this.handleExitRequest((sessionAttributes, speechletResponse) => {
-        done({ sessionAttributes, speechletResponse });
+      this.handleExitRequest((resp) => {
+        done(resp);
       });
       break;
     case 'AMAZON.HelpIntent':
