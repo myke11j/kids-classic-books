@@ -385,6 +385,7 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
         } = resp;
         resp.bookName = book.title;
         resp.authorName = author.name;
+        delete resp.popular_shelves; /* No need for this in future requests, so deleting it to reduce the json size */
         this.setSession(resp);
         if (!this.isBookEligible(popular_shelves)) {
           const card = this.generateCard(messages.cardIneligibleRequest(), messages.messageIneligibleRequest(this.book));
