@@ -190,7 +190,11 @@ KidsService.prototype.handleIntentRequest = function (done) {
 
 /* Card related methods */
 KidsService.prototype.generateCardTitle = function () {
-  return `${skillName} - ${this.appendBooktitleAndAuthor()}`;
+  let text = skillName;
+  const titleAndAuthor = this.appendBooktitleAndAuthor();
+  if (typeof this.session.decision !== 'undefined') text += ` - ${this.session.decision}`;
+  else text += ` - ${titleAndAuthor}`;
+  return text;
 };
 
 KidsService.prototype.generateCardText = function () {
@@ -228,13 +232,14 @@ KidsService.prototype.generateOutputSpeech = function (output) {
 
 KidsService.prototype.generateSpeechText = function () {
   const { session } = this;
+  const { bookName, authorName } = session;
   const resp = {};
   switch (session.lastReq) {
     case 'basic':
-      resp.speechOutput = `${session.book.description} Do you want to get list of similiar books?`;
+      resp.speechOutput = `${session.book.description} Do you want to get list of similiar books like ${bookName}?`;
       break;
     case 'Description':
-      resp.speechOutput = session.book.description;
+      resp.speechOutput = `${this.getSimiliarBooks()}`;
       break;
     case 'Similiar Books':
       resp.speechOutput = 'similiar_books';
@@ -252,41 +257,72 @@ KidsService.prototype.generateSpeechText = function () {
   return resp;
 };
 
+KidsService.prototype.shouldEndSession = function () {
+  const { session } = this;
+  let flag = true;
+  switch (session.lastReq) {
+    case 'basic':
+      flag = false;
+      break;
+    case 'Description':
+      flag = true;
+      break;
+    case 'Similiar Books':
+      flag = true;
+      break;
+    case 'More books from Author':
+      flag = true;
+      break;
+    default:
+      flag = false;
+      break;
+  }
+  return flag;
+};
+
 KidsService.prototype.setLastReq = function () {
   const { session } = this;
+  const { bookName, authorName } = session;
   switch (session.lastReq) {
     case 'basic':
       session.lastReq = 'Description';
+      session.decision = `Similiar Books like ${bookName}`;
       break;
     case 'Description':
       session.lastReq = 'Similiar Books';
+      session.decision = `More books from Author ${authorName}`;
       break;
     case 'Similiar Books':
       session.lastReq = 'More books from Author';
+      session.decision = '';
       break;
     case 'More books from Author':
       session.lastReq = 'Last';
+      session.decision = '';
       break;
     default:
       session.lastReq = 'basic';
+      session.decision = `Description of ${this.appendBooktitleAndAuthor()}`;
       break;
   }
 };
 
 KidsService.prototype.handleYesRequest = function (done) {
-  const shouldEndSession = false;
+  const shouldEndSession = this.shouldEndSession();
   const repromptText = messages.messageReprompt();
   const card = this.generateCard();
   const outputSpeech = this.generateOutputSpeech();
+  this.setLastReq();
   done(this.session,
         { card, outputSpeech, repromptText, shouldEndSession });
 };
 
 KidsService.prototype.handleNoRequest = function (done) {
   const shouldEndSession = true;
-  const repromptText = messages.messageReprompt();
-  const card = this.generateCard(messages.cardHelp());
-  const outputSpeech = this.generateOutputSpeech(messages.messageHelp());
+  const repromptText = null;
+  const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
+  const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
+  this.setLastReq();
   done(this.session,
         { card, outputSpeech, repromptText, shouldEndSession });
 };
@@ -295,8 +331,6 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
   const bookVal = this.intent.slots.BookName.value;
   const authorVal = this.intent.slots.AuthorName.value;
   alexaLogger.logInfo(`Author: ${authorVal}, Book: ${bookVal}`);
-  this.book = bookVal;
-  this.author = authorVal;
   const repromptText = messages.messageReprompt();
   const shouldEndSession = false;
 
@@ -310,8 +344,8 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
             { card, outputSpeech, repromptText, shouldEndSession });
   }
   const {
-        API
-    } = this.generateEndPointAndCardTitle();
+      API
+  } = this.generateEndPointAndCardTitle(bookVal, authorVal);
   alexaLogger.logInfo(`Endpoint generated: ${API}`);
   https.get(API, (res) => {
     const options = {
@@ -349,10 +383,10 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
         const {
             popular_shelves, book, author
         } = resp;
-        this.book = book.title;
-        this.author = author.name;
+        resp.bookName = book.title;
+        resp.authorName = author.name;
         this.setSession(resp);
-        if (!this.isBookIsEligible(popular_shelves)) {
+        if (!this.isBookEligible(popular_shelves)) {
           const card = this.generateCard(messages.cardIneligibleRequest(), messages.messageIneligibleRequest(this.book));
           const outputSpeech = this.generateOutputSpeech(messages.messageIneligibleRequest(this.book));
           return done(this.session,
@@ -372,12 +406,13 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
   });
 };
 
-KidsService.prototype.isBookIsEligible = function (bookShelves) {
+KidsService.prototype.isBookEligible = function (bookShelves) {
   let flag = false;
+  const { bookName } = this.session;
   for (let index = 0; index < kidsShelves.length; index++) {
     const item = kidsShelves[index];
     if (bookShelves.filter(shelf => shelf.name === item).length) {
-      alexaLogger.logInfo(`${this.book} classified as ${item}`);
+      alexaLogger.logInfo(`${bookName} classified as ${item}`);
       flag = true;
       break;
     }
@@ -388,13 +423,24 @@ KidsService.prototype.isBookIsEligible = function (bookShelves) {
 KidsService.prototype.validateRequest = (author, title) => !author && !title;
 
 KidsService.prototype.appendBooktitleAndAuthor = function () {
-  let title = this.book;
-  if (this.author) title += ` from ${this.author}`;
+  const { bookName, authorName } = this.session;
+  let title = bookName;
+  if (authorName) title += ` from ${authorName}`;
   return title;
 };
 
-KidsService.prototype.generateEndPointAndCardTitle = function () {
-  const { book, author } = this;
+KidsService.prototype.getSimiliarBooks = function () {
+  const { bookName, similar_books } = this.session;
+  if (!similar_books.length) return `We do not have any books similiar to ${bookName}`;
+  let text = 'List of similiar books: ';
+  for (let index = 0; index < similar_books.length; index++) {
+    const bookItem = similar_books[index];
+    text += `${bookItem.title}, `;
+  }
+  return text;
+};
+
+KidsService.prototype.generateEndPointAndCardTitle = function (book, author) {
   const resp = {};
   resp.API = 'https://www.goodreads.com/book/title.xml';
   if (author) {

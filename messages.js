@@ -11,6 +11,6 @@ module.exports = {
   cardIneligibleRequest: () => 'Kids Classic Books, non-children book requested',
   messageIneligibleRequest: book => `${book} is not a children book according to our data records.`,
   cardGoodBye: () => 'Good Bye from Kids Classic Books',
-  messageGoodBye: () => 'Good Bye',
+  messageGoodBye: () => 'Thank you for using Kids Classic Books',
   messageReprompt: () => 'I\'m sorry, I am not able to hear your request. Please repeat or say \'help\' for sample requests',
 };
