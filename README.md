@@ -1,6 +1,3 @@
-# kids-classic-books
-Lambda function for Alexa skill - kids-classic-books
-
 ## Inspiration
 
 As a bibliophile, I wanted my Echo to tell me about books I want to read. It's rating, small description, publication year and much more. It's little easier than "googling it", as I can just ask for kids book to Alexa.
@@ -10,10 +7,15 @@ As a bibliophile, I wanted my Echo to tell me about books I want to read. It's r
 It can retrieve any book's details from Goodreads which is labelled as children. User can ask this skill for any book, either by title or title and author, and this skill will return with some basic details like
 - Publisher Name
 - Publisher Year
-- Goodread review count and rating
+- Goodreads review count and rating
 - Most popular genre for this book etc
 
-If the book is not labelled as children book, then it will prompt the user and will ask to request some other book. So, a kid can't retreive information of a book, unless it's a Children Book.
+If the book is not labelled as children book, then it will prompt the user and will ask to request some other book. So, a kid can't retrieve information of a book, unless it's a Children Book.
+
+Sample utterances: 
+- Alexa, ask kids classic, information for The Harry Potter by JK Rowlings
+- Alexa, ask kids classic, information for The Great Wizard Wars from Christina Clarry
+- Alexa, ask kids classic, to tell me about Where the Wild Things Are
 
 ## How I built it
 
@@ -35,7 +37,7 @@ Especially kids books. Because of developing this skill, I just re-read my own k
 
 ## What's next for Kids Classic Books
 
-I have lots of things in pipeline, which I will be integrating in this skill.
+I have lots of things in the pipeline, which I will be integrating into this skill.
 
 - Machine Learning. Based on books requested by kids, this skill will be able to suggest books to that user.
 - Fetches all time popular children's books.
