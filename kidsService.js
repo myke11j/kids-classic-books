@@ -388,8 +388,8 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
         delete resp.popular_shelves; /* No need for this in future requests, so deleting it to reduce the json size */
         this.setSession(resp);
         if (!this.isBookEligible(popular_shelves)) {
-          const card = this.generateCard(messages.cardIneligibleRequest(), messages.messageIneligibleRequest(this.book));
-          const outputSpeech = this.generateOutputSpeech(messages.messageIneligibleRequest(this.book));
+          const card = this.generateCard(messages.cardIneligibleRequest(), messages.messageIneligibleRequest(this.appendBooktitleAndAuthor()));
+          const outputSpeech = this.generateOutputSpeech(messages.messageIneligibleRequest(this.appendBooktitleAndAuthor()));
           return done(this.session,
                 { card, outputSpeech, repromptText: null, shouldEndSession: true });
         }
