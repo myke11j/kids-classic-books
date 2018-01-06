@@ -127,7 +127,7 @@ KidsService.prototype.handleExitRequest = function (done) {
  * @desc CancelIntent handler
  */
 KidsService.prototype.handleCancelRequest = function (done) {
-  const shouldEndSession = false;
+  const shouldEndSession = true;
   const card = this.generateCard(messages.cardGoodBye(), messages.messageGoodBye());
   const outputSpeech = this.generateOutputSpeech(messages.messageGoodBye());
   this.session = {};
@@ -162,8 +162,8 @@ KidsService.prototype.handleIntentRequest = function (done) {
       });
       break;
     case 'AMAZON.CancelIntent':
-      this.handleCancelRequest((sessionAttributes, speechletResponse) => {
-        done({ sessionAttributes, speechletResponse });
+      this.handleCancelRequest((resp) => {
+        done(resp);
       });
       break;
     case 'AMAZON.StopIntent':
