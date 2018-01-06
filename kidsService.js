@@ -260,6 +260,7 @@ KidsService.prototype.generateSpeechText = function () {
 KidsService.prototype.shouldEndSession = function () {
   const { session } = this;
   let flag = true;
+  console.log(session.lastReq)
   switch (session.lastReq) {
     case 'basic':
       flag = false;
@@ -397,7 +398,7 @@ KidsService.prototype.handleBookInfoRequest = function (done) {
         const outputSpeech = this.generateOutputSpeech();
         this.setLastReq();
         return done(this.session,
-            { card, outputSpeech, repromptText: null, shouldEndSession: true });
+            { card, outputSpeech, repromptText: null, shouldEndSession: false });
       } catch (e) {
         alexaLogger.logError(e.message);
       }
