@@ -439,6 +439,7 @@ KidsService.prototype.getsimilarBooks = function () {
     const bookItem = similar_books[index];
     text += `${bookItem.title}, `;
   }
+  text += ' Thank you for using Kids Classic Books.';
   return text;
 };
 
