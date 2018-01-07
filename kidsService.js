@@ -236,16 +236,16 @@ KidsService.prototype.generateSpeechText = function () {
   const resp = {};
   switch (session.lastReq) {
     case 'basic':
-      resp.speechOutput = `${session.book.description} Do you want to get list of similiar books like ${bookName}?`;
+      resp.speechOutput = `${session.book.description} Do you want to get list of similar books like ${bookName}?`;
       break;
     case 'Description':
-      resp.speechOutput = `${this.getSimiliarBooks()}`;
+      resp.speechOutput = `${this.getsimilarBooks()}`;
       break;
-    case 'Similiar Books':
-      resp.speechOutput = 'similiar_books';
+    case 'similar Books':
+      resp.speechOutput = 'similar_books';
       break;
     case 'More books from Author':
-      resp.speechOutput = 'similiar_books';
+      resp.speechOutput = 'similar_books';
       break;
     default:
       resp.speechOutput = `${session.book.title} from ${session.author.name} was published in ${session.book.publication_year} by publisher ${session.book.publisher}. `
@@ -268,7 +268,7 @@ KidsService.prototype.shouldEndSession = function () {
     case 'Description':
       flag = true;
       break;
-    case 'Similiar Books':
+    case 'similar Books':
       flag = true;
       break;
     case 'More books from Author':
@@ -287,13 +287,13 @@ KidsService.prototype.setLastReq = function () {
   switch (session.lastReq) {
     case 'basic':
       session.lastReq = 'Description';
-      session.decision = `Similiar Books like ${bookName}`;
+      session.decision = `similar Books like ${bookName}`;
       break;
     case 'Description':
-      session.lastReq = 'Similiar Books';
+      session.lastReq = 'similar Books';
       session.decision = `More books from Author ${authorName}`;
       break;
-    case 'Similiar Books':
+    case 'similar Books':
       session.lastReq = 'More books from Author';
       session.decision = '';
       break;
@@ -431,10 +431,10 @@ KidsService.prototype.appendBooktitleAndAuthor = function () {
   return title;
 };
 
-KidsService.prototype.getSimiliarBooks = function () {
+KidsService.prototype.getsimilarBooks = function () {
   const { bookName, similar_books } = this.session;
-  if (!similar_books.length) return `We do not have any books similiar to ${bookName}`;
-  let text = 'List of similiar books: ';
+  if (!similar_books.length) return `We do not have any books similar to ${bookName}`;
+  let text = 'List of similar books: ';
   for (let index = 0; index < similar_books.length; index++) {
     const bookItem = similar_books[index];
     text += `${bookItem.title}, `;
