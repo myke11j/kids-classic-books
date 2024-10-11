@@ -1,3 +1,4 @@
+# Deprecated ⚠️ 
 ## Inspiration
 
 As a bibliophile, I wanted my Echo to tell me about books I want to read. It's rating, small description, publication year and much more. It's little easier than "googling it", as I can just ask for kids book to Alexa.
