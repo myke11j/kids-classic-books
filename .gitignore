@@ -62,3 +62,5 @@ event.json
 build/
 .lambda/
 .env
+
+.vscode/*
