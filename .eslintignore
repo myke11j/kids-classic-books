@@ -10,3 +10,57 @@ build/
 .npm/
 vendor/
 node_modules/
+
+# Node modules
+node_modules/
+
+# Build directories
+dist/
+build/
+out/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files and directories
+.temp/
+.tmp/
+.cache/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Environment variables
+.env
+.env.*
+.env.local
+
+# Editor-specific files
+*.swp
+*.swo
+*.bak
+.idea/
+.vscode/
+*.code-workspace
+
+# TypeScript output
+*.tsbuildinfo
+
+# Miscellaneous
+*.min.js
+*.map
+*.lock
+*.tgz
+
+# Git ignored files
+.git/
+.gitignore
+.gitattributes
